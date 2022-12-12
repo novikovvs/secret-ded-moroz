@@ -80,6 +80,13 @@ var start = func(update tgbotapi.Update) (msg tgbotapi.MessageConfig, err error)
 		msg.ReplyMarkup = numericKeyboard
 		return msg, nil
 	}
+
+	if message.Chat.UserName == "" {
+		msg = tgbotapi.NewMessage(message.Chat.ID,
+			"Для участия необходимо заполнить user_name аккаунта!\nЗаполните и повторите попытку.")
+		return msg, nil
+	}
+
 	var inviteLink = ""
 
 	if message.Chat.UserName != "" {
@@ -216,6 +223,7 @@ var startGame = func(update tgbotapi.Update) (msg tgbotapi.MessageConfig, err er
 		}
 
 		go saveUsers()
+		go notifyUsers()
 
 		msg = tgbotapi.NewMessage(chatId, "Успешно!")
 		return msg, nil
@@ -268,7 +276,7 @@ func saveUser(user User) {
 func saveUsers() {
 	data, _ := json.Marshal(users)
 	adminId, err := strconv.ParseInt(os.Getenv("ADMIN_ID"), 10, 64)
-	if os.WriteFile("out.json", data, 0777) != nil {
+	if os.WriteFile("users.json", data, 0777) != nil {
 		errorChan <- BotRuntimeError{
 			chatId: adminId,
 			err:    err,
@@ -281,7 +289,14 @@ func saveUsers() {
 		err:    errors.New("Удачно записано в файл\n"),
 	}
 }
-
+func notifyUsers() {
+	for _, user := range users {
+		errorChan <- BotRuntimeError{
+			chatId: user.ChatId,
+			err:    errors.New("Игра началась!\nПроверь своего получателя)"),
+		}
+	}
+}
 func main() {
 	err := godotenv.Load()
 	if err != nil {

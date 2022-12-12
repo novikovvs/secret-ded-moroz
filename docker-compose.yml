@@ -1,0 +1,9 @@
+version: "3.3"
+
+services:
+  go:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./src/.env.example:/app/.env
