@@ -61,7 +61,7 @@ func (u *User) getRecipientInfo() string {
 func (u *User) toString() string {
 	return "1)Мои пожелания: " + u.Description +
 		"\n2)Айди чата: " + strconv.FormatInt(u.ChatId, 10) +
-		"\n2)Username: @" + u.UserName +
+		"\n3)Username: @" + u.UserName +
 		"\n4)Имя: " + u.FirstName +
 		"\n5)Информация о цели:\n" + u.getRecipientInfo()
 }
