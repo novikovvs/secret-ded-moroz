@@ -1,0 +1,6 @@
+/.env
+*.json
+/.idea/modules.xml
+/.idea/secret-ded-moroz.iml
+/.idea/vcs.xml
+.idea/
