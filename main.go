@@ -110,6 +110,25 @@ var start = func(update tgbotapi.Update) (msg tgbotapi.MessageConfig, err error)
 
 	return msg, nil
 }
+var getPlayers = func(update tgbotapi.Update) (msg tgbotapi.MessageConfig, err error) {
+	var chatId int64
+
+	if update.Message != nil {
+		chatId = update.Message.Chat.ID
+	} else {
+		chatId = update.CallbackQuery.Message.Chat.ID
+	}
+
+	if _, ok := users[chatId]; ok {
+		msg = tgbotapi.NewMessage(chatId, getAllPlayerStringify())
+		return msg, nil
+	}
+
+	return tgbotapi.NewMessage(
+		chatId,
+		"Упс! Не нашли вас в участниках.\nСначала запишитесь! /start",
+	), nil
+}
 var me = func(update tgbotapi.Update) (msg tgbotapi.MessageConfig, err error) {
 	var chatId int64
 
@@ -244,6 +263,7 @@ var terminator = map[string]func(update tgbotapi.Update) (msg tgbotapi.MessageCo
 	"/description": changeDescription,
 	"/keyboard":    showKeyboard,
 	"/start_game":  startGame,
+	"/players":     getPlayers,
 }
 
 func gopherErrorHandler() {
@@ -260,6 +280,7 @@ func gopherErrorHandler() {
 		}
 	}
 }
+
 func saveUser(user User) {
 	users[user.ChatId] = user
 
@@ -273,6 +294,7 @@ func saveUser(user User) {
 		log.Println("Write error!")
 	}
 }
+
 func saveUsers() {
 	data, _ := json.Marshal(users)
 	adminId, err := strconv.ParseInt(os.Getenv("ADMIN_ID"), 10, 64)
@@ -289,6 +311,7 @@ func saveUsers() {
 		err:    errors.New("Удачно записано в файл\n"),
 	}
 }
+
 func notifyUsers() {
 	for _, user := range users {
 		errorChan <- BotRuntimeError{
@@ -297,6 +320,19 @@ func notifyUsers() {
 		}
 	}
 }
+
+func getAllPlayerStringify() string {
+	var result = ""
+	var inc int8 = 1
+
+	for _, user := range users {
+		result += strconv.Itoa(int(inc)) + ") " + user.InviteLink + "\n"
+		inc++
+	}
+
+	return result
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
