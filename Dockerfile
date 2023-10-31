@@ -1,10 +1,22 @@
-FROM golang
+ARG GO_VERSION
+ARG ALPINE_VERSION
+
+FROM golang:1.19-alpine3.15 as build
 
 WORKDIR /app
 
-COPY . .
-RUN go install
+COPY ./ .
 
-RUN go install github.com/githubnemo/CompileDaemon@latest
+RUN go build -mod vendor -o /app/dist/pusher .
 
-ENTRYPOINT exec CompileDaemon -build="go build -o /usr/local/bin/analytic-pusher main.go" -command="analytic-pusher"
+FROM alpine
+
+USER nobody
+
+COPY --from=build --chown=nobody:nobody /app/dist /app
+COPY --chown=nobody:nobody user_struct.json /app
+COPY --chown=nobody:nobody users.json /app
+
+WORKDIR /app
+
+ENTRYPOINT ["/app/pusher"]
